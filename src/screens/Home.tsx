@@ -1,4 +1,7 @@
+import React, { useState } from "react";
 import styled from "styled-components";
+
+import FilmSearch from "../components/FilmSearch";
 
 const Container = styled.div`
     align-items: center;
@@ -63,7 +66,18 @@ const Book = styled.div`
     }
 `
 
-const Home = () => {
+const Home: React.FC = () => {
+    // 모달을 보여줄지 여부를 결정하는 상태는 여전히 Home 컴포넌트가 관리
+    const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
+
+    const openModal = (): void => {
+        setIsModalOpen(true);
+    };
+    
+    const closeModal = (): void => {
+        setIsModalOpen(false);
+    };
+
     return (
         <Container>
             <Title>
@@ -71,13 +85,21 @@ const Home = () => {
                 <p>영화, 독서 기록지</p>
             </Title>
             <Record>
-                <Film>
-                    <img src="/images/Gemini_Generated_Film.png" alt="필름" width={200} height={200}/>
+                {/* Film 클릭 시 모달을 여는 기능은 그대로 유지 */}
+                <Film onClick={openModal}>
+                    <img src="/images/film.webp" alt="필름" width={150} height={150} style={{margin: "50px 0 50px 0"}} />
+                    <h3>영화 기록하기</h3>
                 </Film>
                 <Book>
-                    독서 기록하기
+                    <img src="/images/book.webp" alt="필름" width={150} height={150} style={{margin: "50px 0 50px 0"}} />
+                    <h3>독서 기록하기</h3>
                 </Book>
             </Record>
+
+            {/* 불러온 모달 컴포넌트를 사용.
+                필요한 props(isOpen, onClose)를 전달해줌.
+            */}
+            <FilmSearch isOpen={isModalOpen} onClose={closeModal} />
         </Container>
     );
 }
