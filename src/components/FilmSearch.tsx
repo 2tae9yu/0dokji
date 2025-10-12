@@ -5,6 +5,7 @@ import styled from "styled-components";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { ko } from "date-fns/locale";
+import { useNavigate } from 'react-router-dom'; // ✅ useNavigate 훅 import
 
 // --- 스타일 컴포넌트 ---
 const ModalBackground = styled.div`
@@ -173,6 +174,7 @@ const FilmSearch: React.FC<FilmSearchProps> = ({ isOpen, onClose }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [selectedMovie, setSelectedMovie] = useState<Movie | null>(null);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null); // 초기값을 null로 변경
+  const navigate = useNavigate(); // ✅ navigate 함수 사용 준비
 
   // (이하 useEffect들은 이전과 동일)
   useEffect(() => {
@@ -242,13 +244,18 @@ const FilmSearch: React.FC<FilmSearchProps> = ({ isOpen, onClose }) => {
     }
   };
 
-  // ✅ 다음 버튼 클릭 시 실행될 함수 (지금은 콘솔에 로그만 출력)
+  // ✅ '다음' 버튼 클릭 시 실행될 함수 수정
   const handleNextClick = () => {
     if (selectedMovie && selectedDate) {
-        console.log("선택된 영화:", selectedMovie.movieNm);
-        console.log("선택된 날짜:", selectedDate.toLocaleDateString('ko-KR'));
-        // 여기서 부모 컴포넌트로 선택된 데이터를 전달하거나 다른 로직을 수행할 수 있습니다.
-        resetAndClose(); // 예시로, 다음 단계로 넘어간 후 모달을 닫습니다.
+      navigate('/film', { 
+        state: { 
+          movieTitle: selectedMovie.movieNm,
+          viewDate: selectedDate.toISOString(),
+          // ✅ createMovieInfoString 함수로 만든 상세 정보를 함께 전달합니다.
+          movieInfo: createMovieInfoString(selectedMovie)
+        } 
+      });
+      resetAndClose();
     }
   };
 
@@ -264,7 +271,7 @@ const FilmSearch: React.FC<FilmSearchProps> = ({ isOpen, onClose }) => {
     return [movie.prdtYear, directorNames, movie.typeNm, movie.repGenreNm].filter(Boolean).join(" | ");
   }
 
-  const modalTitle = modalStep === "search" ? "어떤 영화를 감상하셨나요?" : "감상일이 언제인가요?";
+  const modalTitle = modalStep === "search" ? "어떤 영화를 관람하셨나요?" : "관람일이 언제인가요?";
 
   return (
     // ✅ ModalBackground의 onClick 이벤트 제거
