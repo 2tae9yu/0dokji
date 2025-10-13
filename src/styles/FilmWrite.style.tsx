@@ -9,14 +9,37 @@ export const MainLayoutContainer = styled.div`
   padding: 50px 20px;
 `;
 
+// ✅ 1. PageContainer에 position: relative 추가
 export const PageContainer = styled.div`
+  background-color: #ffffff;
+  padding: 30px 40px;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   width: 100%;
   max-width: 800px;
-  padding: 40px;
-  background-color: #ffffff;
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  flex-shrink: 0; 
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  position: relative; /* 👈 X 버튼의 위치 기준점이 됩니다 */
+`;
+
+// ✅ 2. 우측 상단 X 버튼 스타일 새로 추가
+export const ClosePageButton = styled.button`
+  position: absolute;
+  top: 20px;
+  right: 25px;
+  background: transparent;
+  border: none;
+  font-size: 2.5rem; /* '×' 기호 크기 */
+  color: #888;
+  cursor: pointer;
+  line-height: 1; /* 글자 높이 조절 */
+  padding: 0;
+  transition: color 0.2s ease-in-out;
+
+  &:hover {
+    color: #333;
+  }
 `;
 
 // --- 입력 요소 ---

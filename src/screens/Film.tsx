@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import styled, { keyframes } from 'styled-components';
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import { Review } from '../types'; // 1단계에서 만든 타입 import
 
 import {
   MainLayoutContainer,
@@ -28,6 +29,7 @@ import {
   ModalContent,
   ModalButtonContainer,
   ModalButton,
+  ClosePageButton,
 } from '../styles/FilmWrite.style';
 
 // --- Gemini API 클라이언트 설정 ---
@@ -115,12 +117,48 @@ const FilmWritePage: React.FC = () => {
   };
 
   const handleSubmit = () => {
-    // ... (기존과 동일)
-    console.log({
-      reviewTitle, movieTitle, movieInfo, viewDate: formattedDate, reviewContent,
-    });
+    // 1. 유효성 검사
+    if (!reviewTitle.trim() || !reviewContent.trim()) {
+      alert('제목과 내용을 모두 입력해주세요.');
+      return;
+    }
+
+    // 2. localStorage에서 기존 리뷰 데이터 가져오기
+    const savedReviewsJSON = localStorage.getItem('reviews');
+    const savedReviews: Review[] = savedReviewsJSON ? JSON.parse(savedReviewsJSON) : [];
+
+    // 3. 새로 작성한 리뷰 객체 만들기
+    const newReview: Review = {
+      id: Date.now(), // 현재 시간을 고유 ID로 사용
+      reviewTitle,
+      reviewContent,
+      movieTitle,
+      movieInfo,
+      viewDate: formattedDate,
+    };
+
+    // 4. 기존 배열에 새 리뷰 추가
+    const updatedReviews = [...savedReviews, newReview];
+
+    // 5. 업데이트된 배열을 다시 localStorage에 저장 (문자열로 변환)
+    localStorage.setItem('reviews', JSON.stringify(updatedReviews));
+
+    // 6. 저장 완료 후 알림 및 페이지 이동
     alert('감상문이 저장되었습니다!');
-    navigate('/');
+    navigate('/'); // 목록 페이지나 메인 페이지로 이동
+  };
+
+  // ✅ 이 함수를 추가해주세요.
+  const handleCancel = () => {
+    // 사용자가 무언가 입력했다면, 정말 나갈 것인지 확인합니다.
+    if (reviewTitle || reviewContent) {
+      if (window.confirm("작성 중인 내용이 있습니다. 정말로 페이지를 나가시겠습니까?")) {
+        navigate('/'); // 확인을 누르면 메인 페이지로 이동
+      }
+    } else {
+      // 작성 내용이 없으면 바로 메인 페이지로 이동
+      navigate('/');
+    }
   };
 
   // ✅ --- 3. AI 다듬기 API 호출 함수 ---
@@ -168,6 +206,8 @@ const FilmWritePage: React.FC = () => {
     <>
       <MainLayoutContainer>
         <PageContainer ref={pageContainerRef}>
+        {/* ✅ 2. X 버튼을 PageContainer 최상단에 추가 */}
+          <ClosePageButton onClick={handleCancel}>&times;</ClosePageButton>
           <h2>영화 감상문 작성</h2>
           <TitleInput
             type="text"
