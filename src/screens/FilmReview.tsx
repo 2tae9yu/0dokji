@@ -2,10 +2,11 @@
 
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import styled from 'styled-components'; // 💅 1. styled-components import
+import styled from 'styled-components';
+// ✨ types.ts 파일에 reviewContent, viewDate 등이 있으므로 그대로 import 합니다.
 import { Review } from '../types';
 
-// 💅 2. 모든 스타일을 styled-components로 정의합니다.
+// ... (Container, Title 등 다른 스타일은 이전과 동일)
 const Container = styled.div`
   max-width: 800px;
   margin: 40px auto;
@@ -25,10 +26,9 @@ const Title = styled.h1`
 
 const ButtonContainer = styled.div`
   text-align: right;
-  margin-bottom: 25px; /* 목록과의 간격 조정 */
+  margin-bottom: 25px;
 `;
 
-// Link 컴포넌트를 스타일링합니다.
 const AddReviewButton = styled(Link)`
   display: inline-block;
   background-color: #3498db;
@@ -65,7 +65,6 @@ const ReviewCard = styled.li`
   }
 `;
 
-// react-router-dom의 Link 컴포넌트를 기반으로 스타일을 적용합니다.
 const ReviewLink = styled(Link)`
   display: block;
   padding: 20px 25px;
@@ -77,12 +76,21 @@ const ReviewCardTitle = styled.h2`
   font-size: 1.3rem;
   font-weight: 600;
   color: #34495e;
-  margin: 0 0 5px 0;
+  margin: 0 0 8px 0;
 `;
 
 const ReviewCardMovieTitle = styled.p`
   font-size: 1rem;
   color: #95a5a6;
+  margin: 0;
+  padding-top: 8px;
+  border-top: 1px solid #ecf0f1;
+  margin-top: 12px;
+`;
+
+const ReviewCardDate = styled.p`
+  font-size: 0.9rem;
+  color: #7f8c8d;
   margin: 0;
 `;
 
@@ -94,7 +102,6 @@ const EmptyMessage = styled.p`
 `;
 
 
-// --- 컴포넌트 본문 ---
 const FilmReview: React.FC = () => {
   const [reviews, setReviews] = useState<Review[]>([]);
 
@@ -105,8 +112,9 @@ const FilmReview: React.FC = () => {
     }
   }, []);
 
+  // ✨ 날짜가 이미 'YYYY년 MM월 DD일' 형식이라 formatDate 함수가 필요 없습니다!
+
   return (
-    // 💅 3. JSX 부분을 className 대신 정의한 styled component로 교체합니다.
     <Container>
       <Title>감상문 목록</Title>
 
@@ -118,8 +126,15 @@ const FilmReview: React.FC = () => {
         <ReviewList>
           {reviews.map((review) => (
             <ReviewCard key={review.id}>
-              <ReviewLink to={`/review/${review.id}`}>
+              {/* ✨ id가 number 타입이므로 문자열로 변환해줍니다. */}
+              <ReviewLink to={`/review/${review.id.toString()}`}>
                 <ReviewCardTitle>{review.reviewTitle}</ReviewCardTitle>
+                
+                {/* ✨ review.createdAt 대신 review.viewDate를 바로 사용합니다. */}
+                {review.viewDate && (
+                  <ReviewCardDate>{review.viewDate}</ReviewCardDate>
+                )}
+                
                 <ReviewCardMovieTitle>{review.movieTitle}</ReviewCardMovieTitle>
               </ReviewLink>
             </ReviewCard>
