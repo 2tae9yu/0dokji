@@ -3,68 +3,79 @@ import styled from "styled-components";
 
 import FilmSearch from "../components/FilmSearch";
 
+// --- 👇 스타일 코드 시작 ---
+
+// 전체 레이아웃: 부드러운 배경색과 충분한 여백 추가
 const Container = styled.div`
-    align-items: center;
+    width: 100%;
+    min-height: calc(100vh - 70px); /* 화면 높이에서 상단 여백 70px을 뺀 만큼만 차지 */
+    padding: 40px 20px;
     text-align: center;
+    box-sizing: border-box; /* 패딩이 너비를 넘지 않도록 설정 */
 `;
 
+// 제목: 자간과 상하 여백으로 가독성 향상
 const Title = styled.div`
-    text-align: center;
+    margin-bottom: 50px;
+    h1 {
+        font-size: 2.2rem;
+        font-weight: 700;
+        color: #343a40;
+        margin-bottom: 10px;
+        letter-spacing: -0.5px; /* 자간을 살짝 좁혀서 세련되게 */
+    }
 `;
 
-
+// 카드들을 감싸는 컨테이너: flexbox의 gap으로 간편하게 간격 조절
 const Record = styled.div`
     display: flex;
     justify-content: center;
-`
+    flex-wrap: wrap; /* 화면이 좁아지면 자동으로 줄바꿈 */
+    gap: 40px; /* 카드 사이의 간격을 40px로 설정 */
+`;
 
-const Film = styled.div`
-    float: left;
-    margin-right: 30px;
-    border-radius: 20px;
-    background-color: #DBCFAB;
-
-    width: 300px;
-    height: 500px;
-
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+// 공통 카드 스타일 (Film, Book이 함께 사용)
+const CardBase = styled.div`
+    width: 320px;
+    height: 480px;
+    background-color: #ffffff; /* 깨끗한 흰색 배경 */
+    border-radius: 16px; /* 더 부드러운 곡선 */
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08); /* 그림자를 더 은은하고 넓게 */
     cursor: pointer;
+    transition: transform 0.3s ease, box-shadow 0.3s ease; /* transition 간단하게 통합 */
 
-    /* 애니메이션 속성 설정 */
-    transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+    /* 내부 콘텐츠 정렬 */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    box-sizing: border-box;
 
-    /* **[핵심]** 호버 효과 정의 */
     &:hover {
-        /* 마우스 오버 시 1.05배 커지게 설정 */
-        transform: scale(1.05);
-        /* 그림자 깊게 */
-        box-shadow: 0 8px 12px rgba(0, 0, 0, 0.2);
+        transform: translateY(-8px); /* 위로 살짝 떠오르는 효과 */
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
     }
-`
 
-const Book = styled.div`
-    display: inline-block;
-    margin-left: 30px;
-    border-radius: 20px;
-    background-color: #DBCFAB;
-
-    width: 300px;
-    height: 500px;
-
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    cursor: pointer;
-
-    /* 애니메이션 속성 설정 */
-    transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
-
-    /* **[핵심]** 호버 효과 정의 */
-    &:hover {
-        /* 마우스 오버 시 1.05배 커지게 설정 */
-        transform: scale(1.05);
-        /* 그림자 깊게 */
-        box-shadow: 0 8px 12px rgba(0, 0, 0, 0.2);
+    img {
+        width: 150px;
+        height: 150px;
+        margin-bottom: 40px; /* 이미지와 텍스트 사이 간격 */
     }
-`
+
+    h3 {
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: #212529;
+    }
+`;
+
+// Film과 Book은 이제 공통 스타일을 상속받기만 하면 됩니다.
+const Film = styled(CardBase)``;
+const Book = styled(CardBase)``;
+
+
+// --- 👆 스타일 코드 끝 ---
 
 const Home: React.FC = () => {
     // 모달을 보여줄지 여부를 결정하는 상태는 여전히 Home 컴포넌트가 관리
@@ -81,8 +92,7 @@ const Home: React.FC = () => {
     return (
         <Container>
             <Title>
-                <h1>영독지 🎞️</h1>
-                <p>영화, 독서 기록지</p>
+                <h1>어떤 걸 기록하시겠어요?</h1>
             </Title>
             <Record>
                 {/* Film 클릭 시 모달을 여는 기능은 그대로 유지 */}
@@ -96,10 +106,8 @@ const Home: React.FC = () => {
                 </Book>
             </Record>
 
-            {/* 불러온 모달 컴포넌트를 사용.
-                필요한 props(isOpen, onClose)를 전달해줌.
-            */}
-            <FilmSearch isOpen={isModalOpen} onClose={closeModal} />
+            {/* --- 🌟 이 부분을 이렇게 수정하세요 --- */}
+            {isModalOpen && <FilmSearch isOpen={isModalOpen} onClose={closeModal} />}
         </Container>
     );
 }

@@ -117,19 +117,17 @@ const FilmWritePage: React.FC = () => {
   };
 
   const handleSubmit = () => {
-    // 1. 유효성 검사
     if (!reviewTitle.trim() || !reviewContent.trim()) {
       alert('제목과 내용을 모두 입력해주세요.');
       return;
     }
 
-    // 2. localStorage에서 기존 리뷰 데이터 가져오기
-    const savedReviewsJSON = localStorage.getItem('reviews');
+    // 🔄 [변경] localStorage -> sessionStorage
+    const savedReviewsJSON = sessionStorage.getItem('reviews');
     const savedReviews: Review[] = savedReviewsJSON ? JSON.parse(savedReviewsJSON) : [];
 
-    // 3. 새로 작성한 리뷰 객체 만들기
     const newReview: Review = {
-      id: Date.now(), // 현재 시간을 고유 ID로 사용
+      id: Date.now(),
       reviewTitle,
       reviewContent,
       movieTitle,
@@ -137,15 +135,13 @@ const FilmWritePage: React.FC = () => {
       viewDate: formattedDate,
     };
 
-    // 4. 기존 배열에 새 리뷰 추가
     const updatedReviews = [...savedReviews, newReview];
 
-    // 5. 업데이트된 배열을 다시 localStorage에 저장 (문자열로 변환)
-    localStorage.setItem('reviews', JSON.stringify(updatedReviews));
+    // 🔄 [변경] localStorage -> sessionStorage
+    sessionStorage.setItem('reviews', JSON.stringify(updatedReviews));
 
-    // 6. 저장 완료 후 알림 및 페이지 이동
     alert('감상문이 저장되었습니다!');
-    navigate('/'); // 목록 페이지나 메인 페이지로 이동
+    navigate('/');
   };
 
   // ✅ 이 함수를 추가해주세요.

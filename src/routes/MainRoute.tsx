@@ -1,18 +1,20 @@
 import { createBrowserRouter } from "react-router-dom";
 
-import Home from "../screens/Home";
-import FilmWritePage from "../screens/Film";
 import Layout from "../layout/Layout";
+import Home from "../screens/Home";
+import FilmWrite from "../screens/FilmWrite";
 import FilmReview from "../screens/FilmReview";
-import ReviewDetailPage from "../screens/FilmReviewDetail";
+import FilmReviewDetail from "../screens/FilmReviewDetail";
 
 export const router = createBrowserRouter([{
     path: "/",
 
+    element: <Layout />,
+
     children: [
         { path: "", element: <Home /> },
-        { path: "film", element: <FilmWritePage /> },
+        { path: "film", element: <FilmWrite /> },
         { path: "filmreview", element: <FilmReview /> },
-        { path: "/review/:reviewId", element: <ReviewDetailPage /> },
+        { path: "/review/:reviewId", element: <FilmReviewDetail /> },
     ]
 }]);
