@@ -2,6 +2,7 @@
   "name": "0dokji",
   "version": "0.1.0",
   "private": true,
+  "proxy": "https://www.aladin.co.kr",
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
     "@testing-library/dom": "^10.4.1",
