@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import styled, { keyframes } from 'styled-components';
+import styled from 'styled-components';
 import { GoogleGenerativeAI } from "@google/generative-ai";
-import { Review } from '../types'; // 1단계에서 만든 타입 import
+import { Review } from '../types'; 
 
 import {
   MainLayoutContainer,
@@ -32,21 +32,40 @@ import {
   ClosePageButton,
 } from '../styles/FilmWrite.style';
 
-// --- Gemini API 클라이언트 설정 ---
+// --- ✅ [추가] 스타일 컴포넌트 (도서 페이지와 동일한 레이아웃) ---
+const MovieInfoGroup = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 20px;
+  flex: 1;
+  text-align: left;
+`;
+
+const PosterImg = styled.img`
+  width: 60px;
+  height: 86px; /* 영화 포스터 비율에 맞게 조정 가능, 현재는 책과 통일 */
+  object-fit: cover;
+  border-radius: 4px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  background-color: #eee;
+  flex-shrink: 0;
+`;
+// -----------------------------------------------------------
+
 const API_KEY = process.env.REACT_APP_GEMINI_API_KEY;
 const genAI: GoogleGenerativeAI | null = API_KEY ? new GoogleGenerativeAI(API_KEY) : null;
 
 if (!genAI) {
-  console.error("Gemini API 키가 .env 파일에 설정되지 않았습니다. .env 파일을 확인해주세요.");
+  console.error("Gemini API 키가 .env 파일에 설정되지 않았습니다.");
 }
-// --- 설정 끝 ---
 
-// --- 컴포넌트 ---
 const FilmWritePage: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const { movieTitle, viewDate, movieInfo } = location.state || {};
+  // ✅ [수정] posterUrl 추가로 받아오기
+  const { movieTitle, viewDate, movieInfo, posterUrl } = location.state || {};
 
   const [reviewTitle, setReviewTitle] = useState('');
   const [reviewContent, setReviewContent] = useState('');
@@ -55,11 +74,9 @@ const FilmWritePage: React.FC = () => {
   const [plotSummary, setPlotSummary] = useState('');
   const [isLoadingPlot, setIsLoadingPlot] = useState(false);
   
-  // ✅ --- 2. AI 다듬기 모달 상태 추가 ---
   const [isRefineModalOpen, setIsRefineModalOpen] = useState(false);
   const [isRefining, setIsRefining] = useState(false);
   const [refinedContent, setRefinedContent] = useState('');
-  // --- 상태 추가 끝 ---
 
   const pageContainerRef = useRef<HTMLDivElement>(null);
   const [panelMaxHeight, setPanelMaxHeight] = useState<number | null>(null);
@@ -93,7 +110,6 @@ const FilmWritePage: React.FC = () => {
     : '';
 
   const handleFetchPlot = async () => {
-    // ... (기존과 동일)
     if (!genAI) {
       alert("API 키가 설정되지 않아 줄거리를 불러올 수 없습니다.");
       return;
@@ -122,8 +138,7 @@ const FilmWritePage: React.FC = () => {
       return;
     }
 
-    // 🔄 [변경] localStorage -> sessionStorage
-    const savedReviewsJSON = sessionStorage.getItem('reviews');
+    const savedReviewsJSON = sessionStorage.getItem('filmReviews');
     const savedReviews: Review[] = savedReviewsJSON ? JSON.parse(savedReviewsJSON) : [];
 
     const newReview: Review = {
@@ -133,31 +148,27 @@ const FilmWritePage: React.FC = () => {
       movieTitle,
       movieInfo,
       viewDate: formattedDate,
+      posterUrl, // ✅ [추가] 저장 시 포스터 URL도 함께 저장
     };
 
     const updatedReviews = [...savedReviews, newReview];
 
-    // 🔄 [변경] localStorage -> sessionStorage
-    sessionStorage.setItem('reviews', JSON.stringify(updatedReviews));
+    sessionStorage.setItem('filmReviews', JSON.stringify(updatedReviews));
 
     alert('감상문이 저장되었습니다!');
     navigate('/');
   };
 
-  // ✅ 이 함수를 추가해주세요.
   const handleCancel = () => {
-    // 사용자가 무언가 입력했다면, 정말 나갈 것인지 확인합니다.
     if (reviewTitle || reviewContent) {
       if (window.confirm("작성 중인 내용이 있습니다. 정말로 페이지를 나가시겠습니까?")) {
-        navigate('/'); // 확인을 누르면 메인 페이지로 이동
+        navigate('/'); 
       }
     } else {
-      // 작성 내용이 없으면 바로 메인 페이지로 이동
       navigate('/');
     }
   };
 
-  // ✅ --- 3. AI 다듬기 API 호출 함수 ---
   const handleAiRefine = async () => {
     if (!reviewContent.trim()) {
       alert("감상문 내용을 먼저 작성해주세요.");
@@ -188,7 +199,6 @@ const FilmWritePage: React.FC = () => {
     }
   };
 
-  // ✅ --- 4. 다듬은 내용 적용 함수 ---
   const handleApplyRefinement = () => {
     setReviewContent(refinedContent);
     setIsRefineModalOpen(false);
@@ -202,7 +212,6 @@ const FilmWritePage: React.FC = () => {
     <>
       <MainLayoutContainer>
         <PageContainer ref={pageContainerRef}>
-        {/* ✅ 2. X 버튼을 PageContainer 최상단에 추가 */}
           <ClosePageButton onClick={handleCancel}>&times;</ClosePageButton>
           <h2>영화 감상문 작성</h2>
           <TitleInput
@@ -212,11 +221,17 @@ const FilmWritePage: React.FC = () => {
             onChange={(e) => setReviewTitle(e.target.value)}
           />
           
+          {/* ✅ [수정] 포스터 이미지와 텍스트를 그룹으로 묶음 */}
           <ReadOnlyInfoBlock>
-            <MovieInfoWrapper>
-              <MovieTitleText>{movieTitle}</MovieTitleText>
-              <MovieDetailsText>{movieInfo}</MovieDetailsText>
-            </MovieInfoWrapper>
+            <MovieInfoGroup>
+                {posterUrl && <PosterImg src={posterUrl} alt={movieTitle} />}
+                <MovieInfoWrapper>
+                <MovieTitleText>{movieTitle}</MovieTitleText>
+                <MovieDetailsText>{movieInfo}</MovieDetailsText>
+                </MovieInfoWrapper>
+            </MovieInfoGroup>
+            
+            {/* 버튼은 그룹 밖 (오른쪽 끝) 유지 */}
             <PlotButton onClick={handleFetchPlot}>줄거리 요약 보기</PlotButton>
           </ReadOnlyInfoBlock>
           
@@ -229,7 +244,6 @@ const FilmWritePage: React.FC = () => {
           />
           
           <ButtonContainer>
-            {/* ✅ onClick 핸들러 변경 */}
             <AiRefineButton onClick={handleAiRefine} disabled={!reviewContent.trim()}>AI 다듬기</AiRefineButton>
             <SubmitButton onClick={handleSubmit}>저장하기</SubmitButton>
           </ButtonContainer>
@@ -252,7 +266,7 @@ const FilmWritePage: React.FC = () => {
         )}
       </MainLayoutContainer>
 
-      {/* ✅ --- 5. AI 다듬기 모달 렌더링 --- */}
+      {/* AI 다듬기 모달 */}
       {isRefineModalOpen && (
         <ModalBackdrop>
           <ModalContainer>

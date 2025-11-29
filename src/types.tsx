@@ -5,4 +5,5 @@ export interface Review {
   movieTitle: string;
   movieInfo: string;
   viewDate: string; // 저장 시점의 날짜 문자열
+  posterUrl?: string;
 }

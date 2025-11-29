@@ -1,9 +1,15 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
-import { Review } from '../types';
+// types.ts에 BookReview 타입이 정의되어 있다고 가정
+import { Review } from '../types'; 
 
-// ✅ [수정] Container에 ref를 연결하기 위해 위치 기준점(relative) 설정
+interface BookReviewType extends Review {
+  bookTitle: string;
+  coverImage?: string;
+}
+
+// ✅ [수정] Container에 ref를 연결하기 위해 relative 설정
 const Container = styled.div`
   max-width: 800px;
   margin: 40px auto;
@@ -12,7 +18,7 @@ const Container = styled.div`
   background-color: #f9f9f9;
   border-radius: 12px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-  position: relative; /* 팝오버의 절대 위치 기준점 */
+  position: relative; /* 팝오버 절대 위치 기준 */
 `;
 
 const Title = styled.h1`
@@ -137,7 +143,7 @@ const DateNumber = styled.span<{ $isToday?: boolean }>`
   border-radius: 4px;
 `;
 
-const PosterContainer = styled.div<{ $count: number }>`
+const CoverContainer = styled.div<{ $count: number }>`
   width: 100%;
   height: 100%;
   position: relative;
@@ -150,7 +156,7 @@ const PosterContainer = styled.div<{ $count: number }>`
       : 'none'};
 `;
 
-const CalendarPoster = styled.img`
+const CalendarCover = styled.img`
   width: 100%;
   height: 100%;
   object-fit: cover;
@@ -174,9 +180,9 @@ const CountOverlay = styled.div`
   box-sizing: border-box;
 `;
 
-// ✅ [수정] position: absolute로 변경하여 컨테이너 내부에 고정 (스크롤 따라 움직임)
+// ✅ [수정] position: absolute로 변경 (컨테이너 내부 고정)
 const PopoverContainer = styled.div<{ $x: number; $y: number }>`
-  position: absolute; /* fixed -> absolute 변경 */
+  position: absolute; /* fixed -> absolute */
   top: ${(props) => props.$y}px;
   left: ${(props) => props.$x}px;
   background-color: white;
@@ -259,27 +265,27 @@ const ReviewCard = styled.li`
 `;
 const ReviewLink = styled(Link)` display: block; padding: 20px 25px; text-decoration: none; color: inherit; `;
 const CardContent = styled.div` display: flex; align-items: center; gap: 20px; `;
-const ListPosterImg = styled.img` width: 60px; height: 86px; object-fit: cover; border-radius: 4px; background-color: #eee; flex-shrink: 0; box-shadow: 0 2px 4px rgba(0,0,0,0.1); `;
+const ListCoverImg = styled.img` width: 60px; height: 86px; object-fit: cover; border-radius: 4px; background-color: #eee; flex-shrink: 0; box-shadow: 0 2px 4px rgba(0,0,0,0.1); `;
 const TextContent = styled.div` display: flex; flex-direction: column; flex: 1; `;
 const ReviewCardTitle = styled.h2` font-size: 1.3rem; font-weight: 600; color: #34495e; margin: 0 0 5px 0; `;
-const ReviewCardMovieTitle = styled.p` font-size: 0.95rem; color: #95a5a6; margin: 5px 0 0 0; `;
+const ReviewCardBookTitle = styled.p` font-size: 0.95rem; color: #95a5a6; margin: 5px 0 0 0; `;
 const ReviewCardDate = styled.p` font-size: 0.85rem; color: #7f8c8d; margin: 0; margin-bottom: 8px; `;
 const EmptyMessage = styled.p` text-align: center; color: #7f8c8d; padding: 40px 0; font-size: 1.1rem; `;
 
-const FilmReview: React.FC = () => {
-  const [reviews, setReviews] = useState<Review[]>([]);
+const BookReview: React.FC = () => {
+  const [reviews, setReviews] = useState<BookReviewType[]>([]);
   const [viewMode, setViewMode] = useState<'calendar' | 'list'>('calendar');
   const [currentDate, setCurrentDate] = useState(new Date());
   const navigate = useNavigate();
 
-  // ✅ [수정] 컨테이너 위치 계산을 위한 ref 추가
+  // ✅ [수정] 컨테이너 ref 추가
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const [popoverReviews, setPopoverReviews] = useState<Review[] | null>(null);
+  const [popoverReviews, setPopoverReviews] = useState<BookReviewType[] | null>(null);
   const [popoverPos, setPopoverPos] = useState<{ x: number, y: number } | null>(null);
 
   useEffect(() => {
-    const savedReviewsJSON = sessionStorage.getItem('filmReviews');
+    const savedReviewsJSON = sessionStorage.getItem('bookReviews');
     if (savedReviewsJSON) {
       setReviews(JSON.parse(savedReviewsJSON));
     }
@@ -288,21 +294,20 @@ const FilmReview: React.FC = () => {
   const handlePrevMonth = () => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1));
   const handleNextMonth = () => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1));
 
-  // ✅ [수정] 클릭 핸들러: 컨테이너 기준 좌표 계산 & 단일 항목 안전 이동
-  const handleDateClick = (e: React.MouseEvent, dayReviews: Review[]) => {
-    e.stopPropagation(); // 이벤트 버블링 방지
+  // ✅ [수정] 클릭 핸들러: 컨테이너 기준 좌표 계산
+  const handleDateClick = (e: React.MouseEvent, dayReviews: BookReviewType[]) => {
+    e.stopPropagation();
     if (!dayReviews || dayReviews.length === 0) return;
 
     if (dayReviews.length === 1) {
-      // ✅ 오류 방지: id가 있는지 확인하고 string으로 변환
+      // ✅ 오류 방지 (id check)
       if (dayReviews[0] && dayReviews[0].id) {
-          navigate(`/film-review/${dayReviews[0].id.toString()}`);
+          navigate(`/book-review/${dayReviews[0].id}`);
       }
     } else {
-      // ✅ 팝오버 위치 계산 (컨테이너 내부 좌표)
+      // ✅ 좌표 계산
       if (containerRef.current) {
         const rect = containerRef.current.getBoundingClientRect();
-        // e.clientX(뷰포트 X) - rect.left(컨테이너 X) = 컨테이너 내부 X
         const x = e.clientX - rect.left + 15; 
         const y = e.clientY - rect.top - 10;
         
@@ -341,18 +346,18 @@ const FilmReview: React.FC = () => {
         <DayCell key={day} onClick={(e) => handleDateClick(e, dayReviews)}>
           <DateNumber $isToday={isToday}>{day}</DateNumber>
           {mainReview && (
-            <PosterContainer $count={dayReviews.length}>
-               {mainReview.posterUrl ? (
-                 <CalendarPoster src={mainReview.posterUrl} alt={mainReview.movieTitle} />
+            <CoverContainer $count={dayReviews.length}>
+               {mainReview.coverImage ? (
+                 <CalendarCover src={mainReview.coverImage} alt={mainReview.bookTitle} />
                ) : (
                  <div style={{ width:'100%', height:'100%', backgroundColor: '#eee', display:'flex', alignItems:'center', justifyContent:'center', fontSize: '0.7rem', color:'#888', textAlign: 'center' }}>
-                    {mainReview.movieTitle}
+                    {mainReview.bookTitle}
                  </div>
                )}
                {dayReviews.length > 1 && (
                  <CountOverlay>+{dayReviews.length - 1}</CountOverlay>
                )}
-            </PosterContainer>
+            </CoverContainer>
           )}
         </DayCell>
       );
@@ -363,7 +368,7 @@ const FilmReview: React.FC = () => {
   return (
     // ✅ [수정] ref 연결
     <Container ref={containerRef}>
-      <Title>영화 감상문 기록장</Title>
+      <Title>독서 감상문 기록장</Title>
       <ButtonContainer>
         <AddReviewButton to="/">+ 새 감상문 작성</AddReviewButton>
       </ButtonContainer>
@@ -398,14 +403,14 @@ const FilmReview: React.FC = () => {
       {popoverReviews && popoverPos && (
         <>
           <TransparentBackdrop onClick={closePopover} />
-          {/* ✅ 팝오버: 컨테이너 기준 절대 위치 사용 */}
+          {/* ✅ 팝오버: 절대 위치 적용 */}
           <PopoverContainer $x={popoverPos.x} $y={popoverPos.y}>
             {popoverReviews.map((review) => (
-              <PopoverItem key={review.id} onClick={() => navigate(`/film-review/${review.id.toString()}`)}>
-                {review.posterUrl ? <img src={review.posterUrl} alt="" /> : <div style={{width:30, height:45, background:'#eee'}}/>}
+              <PopoverItem key={review.id} onClick={() => navigate(`/book-review/${review.id}`)}>
+                {review.coverImage ? <img src={review.coverImage} alt="" /> : <div style={{width:30, height:45, background:'#eee'}}/>}
                 <div>
                   <h4>{review.reviewTitle}</h4>
-                  <p>{review.movieTitle}</p>
+                  <p>{review.bookTitle}</p>
                 </div>
               </PopoverItem>
             ))}
@@ -419,13 +424,13 @@ const FilmReview: React.FC = () => {
             <ReviewList>
               {sortedReviewsForList.map((review) => (
                 <ReviewCard key={review.id}>
-                  <ReviewLink to={`/film-review/${review.id.toString()}`}>
+                  <ReviewLink to={`/book-review/${review.id.toString()}`}>
                     <CardContent>
-                        {review.posterUrl ? <ListPosterImg src={review.posterUrl} /> : <ListPosterImg as="div" />}
+                        {review.coverImage ? <ListCoverImg src={review.coverImage} /> : <ListCoverImg as="div" />}
                         <TextContent>
                             <ReviewCardTitle>{review.reviewTitle}</ReviewCardTitle>
                             {review.viewDate && <ReviewCardDate>{review.viewDate}</ReviewCardDate>}
-                            <ReviewCardMovieTitle>{review.movieTitle}</ReviewCardMovieTitle>
+                            <ReviewCardBookTitle>{review.bookTitle}</ReviewCardBookTitle>
                         </TextContent>
                     </CardContent>
                   </ReviewLink>
@@ -441,4 +446,4 @@ const FilmReview: React.FC = () => {
   );
 };
 
-export default FilmReview;
+export default BookReview;

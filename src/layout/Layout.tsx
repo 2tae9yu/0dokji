@@ -1,8 +1,8 @@
-import React, { useState } from "react"; // useState import 추가
+import React, { useState } from "react";
 import { Outlet, useNavigate } from "react-router-dom";
 import styled from "styled-components";
 
-// --- 기존 스타일 (변경 없음) ---
+// --- 스타일 컴포넌트 (기존과 동일) ---
 const NavBar = styled.nav`
     position: fixed;
     top: 0;
@@ -61,13 +61,10 @@ const SideBarIcon = styled.div`
 
 const MainContent = styled.main`
     background-color: #f8f9fa;
-    padding-top: 60px; /* NavBar 높이와 맞춤 */
-    min-height: calc(100vh - 60px); /* 스크롤이 생기지 않도록 정확한 높이 계산 */
+    padding-top: 60px;
+    min-height: calc(100vh - 60px);
 `;
 
-// --- ✨ 사이드바 스타일 추가 ---
-
-// 사이드바가 열렸을 때 뒷배경을 어둡게 만드는 역할
 const Backdrop = styled.div`
     position: fixed;
     top: 0;
@@ -75,29 +72,26 @@ const Backdrop = styled.div`
     width: 100%;
     height: 100%;
     background-color: rgba(0, 0, 0, 0.4);
-    z-index: 9999; // NavBar와 동일한 레벨
+    z-index: 9999;
 `;
 
-// 실제 사이드바 메뉴 스타일
 const SidebarContainer = styled.aside<{ isOpen: boolean }>`
     position: fixed;
     top: 0;
     right: 0;
     height: 100vh;
-    width: 280px; /* 사이드바 너비 */
+    width: 280px;
     background-color: #ffffff;
     box-shadow: -2px 0 8px rgba(0,0,0,0.1);
     
-    /* isOpen props에 따라 위치 변경 */
     transform: translateX(${({ isOpen }) => (isOpen ? '0' : '100%')});
-    transition: transform 0.3s ease-in-out; /* 부드러운 애니메이션 효과 */
-    z-index: 10000; // 최상위에 위치
+    transition: transform 0.3s ease-in-out;
+    z-index: 10000;
     
-    padding: 80px 20px 20px; /* 메뉴가 NavBar 아래부터 시작하도록 상단 여백 */
+    padding: 80px 20px 20px;
     box-sizing: border-box;
 `;
 
-// 사이드바 메뉴 아이템 스타일
 const MenuItem = styled.div`
     padding: 15px 10px;
     font-size: 1.1rem;
@@ -106,9 +100,37 @@ const MenuItem = styled.div`
     cursor: pointer;
     border-radius: 8px;
     transition: background-color 0.2s ease;
+    
+    display: flex; 
+    justify-content: space-between;
+    align-items: center;
 
     &:hover {
-        background-color: #f1f3f5; /* 마우스 올렸을 때 배경색 */
+        background-color: #f1f3f5;
+    }
+`;
+
+const SubMenuContainer = styled.div<{ isOpen: boolean }>`
+    overflow: hidden;
+    max-height: ${({ isOpen }) => (isOpen ? "200px" : "0")};
+    transition: max-height 0.3s ease-in-out;
+    padding-left: 10px;
+`;
+
+const SubMenuItem = styled(MenuItem)`
+    padding: 12px 10px 12px 25px;
+    font-size: 1rem;
+    color: #555;
+    background-color: transparent;
+
+    &:hover {
+        background-color: #f8f9fa;
+        color: #000;
+    }
+
+    &::before {
+        content: "- ";
+        margin-right: 5px;
     }
 `;
 
@@ -117,20 +139,31 @@ const MenuItem = styled.div`
 const Layout: React.FC = () => {
     const navigate = useNavigate();
     
-    // ✨ 사이드바의 열림/닫힘 상태를 관리하는 state
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+    const [isSubMenuOpen, setIsSubMenuOpen] = useState(false);
 
     const goToHome = () => navigate("/");
 
-    // ✨ 사이드바 상태를 토글하는 함수
+    // ✅ [수정됨] 사이드바 토글 시 하위 메뉴 무조건 초기화(닫기)
     const toggleSidebar = () => {
         setIsSidebarOpen(!isSidebarOpen);
+        setIsSubMenuOpen(false); // 열거나 닫을 때 항상 드롭다운 닫기
     };
 
-    // ✨ "내 감상문" 메뉴 클릭 시 실행될 함수
-    const goToMyReviews = () => {
-        navigate('/filmreview'); // "내 감상문" 페이지 경로로 이동
-        setIsSidebarOpen(false); // 이동 후 사이드바 닫기
+    const toggleSubMenu = () => {
+        setIsSubMenuOpen(!isSubMenuOpen);
+    };
+
+    const goToMovieReviews = () => {
+        navigate('/film-review'); 
+        setIsSidebarOpen(false);
+        setIsSubMenuOpen(false); // 페이지 이동 시에도 닫아주면 좋습니다
+    };
+
+    const goToBookReviews = () => {
+        navigate('/book-review'); 
+        setIsSidebarOpen(false);
+        setIsSubMenuOpen(false);
     };
 
     return (
@@ -141,7 +174,6 @@ const Layout: React.FC = () => {
                     <NavBrand>영독지</NavBrand>
                 </NavBrandContainer>
                 
-                {/* 햄버거 아이콘 클릭 시 toggleSidebar 함수 실행 */}
                 <SideBarIcon onClick={toggleSidebar}>
                     <span></span>
                     <span></span>
@@ -149,11 +181,25 @@ const Layout: React.FC = () => {
                 </SideBarIcon>
             </NavBar>
 
-            {/* ✨ 사이드바 및 뒷배경 렌더링 */}
             {isSidebarOpen && <Backdrop onClick={toggleSidebar} />}
             <SidebarContainer isOpen={isSidebarOpen}>
-                <MenuItem onClick={goToMyReviews}>내 감상문</MenuItem>
-                {/* 다른 메뉴가 있다면 여기에 추가 */}
+                
+                <MenuItem onClick={toggleSubMenu}>
+                    내 감상문
+                    <span style={{ fontSize: '0.8rem', transform: isSubMenuOpen ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.3s' }}>
+                        ▼
+                    </span>
+                </MenuItem>
+
+                <SubMenuContainer isOpen={isSubMenuOpen}>
+                    <SubMenuItem onClick={goToMovieReviews}>
+                        영화 감상문
+                    </SubMenuItem>
+                    <SubMenuItem onClick={goToBookReviews}>
+                        독서 감상문
+                    </SubMenuItem>
+                </SubMenuContainer>
+
             </SidebarContainer>
 
             <MainContent>
