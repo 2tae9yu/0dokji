@@ -8,6 +8,7 @@ import FilmReviewDetail from "../screens/FilmReviewDetail";
 import BookWrite from "../screens/BookWrite";
 import BookReview from "../screens/BookReview";
 import BookReviewDetail from "../screens/BookReviewDetail";
+import RecordStats from "../screens/RecordStats";
 
 export const router = createBrowserRouter([{
     path: "/",
@@ -25,5 +26,8 @@ export const router = createBrowserRouter([{
         { path: "book", element: <BookWrite /> },
         { path: "book-review", element: <BookReview /> },
         { path: "book-review/:reviewId", element: <BookReviewDetail /> },
+
+        // ✅ [추가] 통계 페이지 라우트
+        { path: "stats", element: <RecordStats /> }
     ]
 }]);

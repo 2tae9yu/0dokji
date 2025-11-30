@@ -134,7 +134,6 @@ const SubMenuItem = styled(MenuItem)`
     }
 `;
 
-
 // --- 레이아웃 컴포넌트 ---
 const Layout: React.FC = () => {
     const navigate = useNavigate();
@@ -164,6 +163,12 @@ const Layout: React.FC = () => {
         navigate('/book-review'); 
         setIsSidebarOpen(false);
         setIsSubMenuOpen(false);
+    };
+
+    // ✅ [추가] 통계 페이지 이동 함수
+    const goToStats = () => {
+        navigate('/stats');
+        setIsSidebarOpen(false);
     };
 
     return (
@@ -199,6 +204,12 @@ const Layout: React.FC = () => {
                         독서 감상문
                     </SubMenuItem>
                 </SubMenuContainer>
+
+                {/* ✅ [추가] 나의 기록 통계 메뉴 */}
+                <MenuItem onClick={goToStats}>
+                    나의 기록 통계
+                    <span style={{ fontSize: '1.2rem' }}>📊</span>
+                </MenuItem>
 
             </SidebarContainer>
 
