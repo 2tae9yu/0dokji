@@ -30,7 +30,7 @@ import {
   ModalButtonContainer,
   ModalButton,
   ClosePageButton,
-} from '../styles/FilmWrite.style';
+} from '../styles/Write.style';
 
 // --- ✅ [추가] 스타일 컴포넌트 (도서 페이지와 동일한 레이아웃) ---
 const MovieInfoGroup = styled.div`

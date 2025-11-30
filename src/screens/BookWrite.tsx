@@ -29,7 +29,7 @@ import {
   ModalButtonContainer,
   ModalButton,
   ClosePageButton,
-} from '../styles/FilmWrite.style';
+} from '../styles/Write.style';
 
 // ✅ [추가] 이미지와 텍스트를 묶어줄 컨테이너
 const BookInfoGroup = styled.div`
