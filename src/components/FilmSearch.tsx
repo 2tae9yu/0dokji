@@ -184,10 +184,12 @@ interface FilmSearchProps {
 }
 
 // ✅ [핵심] TMDB API를 이용해 포스터를 가져오는 비동기 컴포넌트
+// src/components/FilmSearch.tsx 내부
+
 const MoviePosterFetcher: React.FC<{ 
   title: string; 
   year: string; 
-  onLoad?: (url: string) => void // 이미지를 찾으면 부모에게 URL을 알려주기 위함
+  onLoad?: (url: string) => void 
 }> = ({ title, year, onLoad }) => {
   const [src, setSrc] = useState<string>("");
 
@@ -197,22 +199,50 @@ const MoviePosterFetcher: React.FC<{
       if (!tmdbKey) return;
 
       try {
-        // ✅ [수정 1] 제목에서 특수문자를 제거하여 매칭률 높이기
-        // 예: "스파이더맨: 노 웨이 홈" -> "스파이더맨 노 웨이 홈"
+        // 1. 제목 정제 (특수문자 제거)
         const cleanTitle = title.replace(/[:\-/]/g, ' ').trim();
-
-        // ✅ [수정 2] &year=${year} 파라미터 제거
-        // KOFIC의 제작년도와 TMDB의 개봉년도가 다를 확률이 높으므로, 
-        // 제목만으로 검색하는 것이 오히려 정확도가 높습니다.
+        
+        // 2. 제목으로만 검색 (일단 다 가져옴)
         const url = `https://api.themoviedb.org/3/search/movie?api_key=${tmdbKey}&query=${encodeURIComponent(cleanTitle)}&language=ko-KR&page=1`;
         
         const response = await fetch(url);
         const data = await response.json();
 
-        if (data.results && data.results.length > 0 && data.results[0].poster_path) {
-          const posterPath = `https://image.tmdb.org/t/p/w92${data.results[0].poster_path}`;
-          setSrc(posterPath);
-          if (onLoad) onLoad(posterPath);
+        if (data.results && data.results.length > 0) {
+          // ✅ [핵심 로직] 결과 목록에서 '연도'가 일치하는 영화 찾기
+          
+          // KOFIC 연도 (제작년도)
+          const targetYear = parseInt(year); 
+
+          // TMDB 결과 중에서 연도가 매칭되는 것 찾기
+          const matchedMovie = data.results.find((movie: any) => {
+            if (!movie.release_date) return false;
+            const releaseYear = parseInt(movie.release_date.substring(0, 4));
+            
+            // 제작년도와 개봉년도는 1년 정도 차이날 수 있음 (오차 허용)
+            return Math.abs(releaseYear - targetYear) <= 1;
+          });
+
+          // 매칭되는 영화가 있으면 그 포스터 사용, 없으면 첫 번째 결과(가장 유명한 것) 사용 여부 결정
+          // -> 정확도를 위해 매칭되는 게 있을 때만 띄우거나, 
+          // -> 혹은 제목이 완전히 똑같다면 첫 번째 것을 쓰는 식의 타협이 필요합니다.
+          
+          let posterPath = "";
+
+          if (matchedMovie && matchedMovie.poster_path) {
+             // 1순위: 연도가 맞는 영화
+             posterPath = matchedMovie.poster_path;
+          } else if (data.results[0].title.replace(/\s/g, "") === cleanTitle.replace(/\s/g, "") && data.results[0].poster_path) {
+             // 2순위: 연도는 다르지만 제목이 띄어쓰기 제외하고 완벽히 똑같은 경우 (유명한 영화일 확률 높음)
+             // 다만 이 경우도 리메이크작 이슈가 있을 수 있으므로, 정확성을 원하면 이 else if 블록을 지우세요.
+             posterPath = data.results[0].poster_path;
+          }
+
+          if (posterPath) {
+            const fullUrl = `https://image.tmdb.org/t/p/w92${posterPath}`;
+            setSrc(fullUrl);
+            if (onLoad) onLoad(fullUrl);
+          }
         }
       } catch (error) {
         console.error("Poster fetch error:", error);
@@ -222,7 +252,6 @@ const MoviePosterFetcher: React.FC<{
     fetchPoster();
   }, [title, year, onLoad]);
 
-  // 이미지가 없으면 빈 화면(혹은 기본 아이콘) 렌더링
   if (!src) return <PosterImg style={{ visibility: 'hidden' }} />; 
   
   return <PosterImg src={src} alt="poster" />;

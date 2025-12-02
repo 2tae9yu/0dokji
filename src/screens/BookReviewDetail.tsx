@@ -1,17 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
-// types.ts에 BookReview 타입 정의가 없다면, Review 타입을 확장해서 사용하거나 any로 처리해야 합니다.
 import { Review } from '../types';
 
-// ✅ 도서용 타입 확장 (필요 시)
 interface BookReviewType extends Review {
   bookTitle: string;
-  bookInfo: string; // 저자, 출판사 등
+  bookInfo: string;
   coverImage?: string;
 }
 
-// --- ✨ 스타일 정의 시작 (FilmReviewDetail과 동일) ---
+// --- ✨ 스타일 정의 시작 ---
 
 const PageWrapper = styled.div`
   padding: 40px 20px;
@@ -44,10 +42,34 @@ const ReviewHeader = styled.div`
   }
 `;
 
-const MetaInfo = styled.div`
+// ✅ [추가] 이미지와 텍스트를 감싸는 컨테이너
+const InfoContainer = styled.div`
   padding: 20px 32px;
   background-color: #ffffff;
   border-bottom: 1px solid #dee2e6;
+  display: flex;
+  gap: 20px;
+  align-items: flex-start;
+
+  @media (max-width: 600px) {
+    flex-direction: column;
+    align-items: center;
+  }
+`;
+
+// ✅ [추가] 표지 이미지 스타일 (영화와 동일하게 너비 100px)
+const CoverImage = styled.img`
+  width: 100px;
+  height: 144px; /* 비율 유지 */
+  object-fit: cover;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+  background-color: #eee;
+  flex-shrink: 0;
+`;
+
+const MetaInfo = styled.div`
+  flex: 1;
   font-size: 0.95rem;
   color: #495057;
 
@@ -60,6 +82,7 @@ const MetaInfo = styled.div`
       font-weight: 600;
       margin-right: 8px;
       color: #343a40;
+      min-width: 60px;
     }
   }
 `;
@@ -69,14 +92,14 @@ const ContentBody = styled.div`
   font-size: 1.1rem;
   line-height: 1.7;
   color: #343a40;
-  
   white-space: pre-wrap; 
   word-break: break-word;
 `;
 
 const ButtonContainer = styled.div`
   padding: 20px 32px;
-  text-align: right;
+  display: flex;
+  justify-content: space-between; /* 양쪽 정렬 */
   border-top: 1px solid #e9ecef;
 `;
 
@@ -95,27 +118,60 @@ const BackButton = styled(Link)`
   }
 `;
 
+// ✅ [추가] 삭제 버튼
+const DeleteButton = styled.button`
+  padding: 10px 20px;
+  background-color: #ff6b6b;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 500;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: background-color 0.2s ease;
+  &:hover { background-color: #fa5252; }
+`;
+
 // --- ✨ 스타일 정의 끝 ---
 
 
 const BookReviewDetail: React.FC = () => {
-  // ✅ URL 파라미터 이름 확인 (MainRoute 설정에 따름)
-  const { reviewId } = useParams<{ reviewId: string }>();
+  const params = useParams();
+  // ✅ ID 파라미터 방어 로직 (reviewId 또는 id 모두 허용)
+  const targetIdString = params.reviewId || params.id;
+
   const [review, setReview] = useState<BookReviewType | null>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
-    // 🔄 sessionStorage 키 변경: 'bookReviews'
+    // ✅ 'bookReviews' 키 사용 확인
     const savedReviewsJSON = sessionStorage.getItem('bookReviews'); 
-    if (savedReviewsJSON && reviewId) {
+    
+    if (savedReviewsJSON && targetIdString) {
       const savedReviews: BookReviewType[] = JSON.parse(savedReviewsJSON);
-      const currentReview = savedReviews.find(r => r.id === parseInt(reviewId, 10));
+      const targetId = parseInt(targetIdString, 10);
+      const currentReview = savedReviews.find(r => r.id === targetId);
       setReview(currentReview || null);
     }
-  }, [reviewId]);
+  }, [targetIdString]);
+
+  // ✅ 삭제 기능 추가
+  const handleDelete = () => {
+    if (window.confirm("정말로 이 독서 감상문을 삭제하시겠습니까?")) {
+      const savedReviewsJSON = sessionStorage.getItem('bookReviews');
+      if (savedReviewsJSON) {
+        const savedReviews: BookReviewType[] = JSON.parse(savedReviewsJSON);
+        const updatedReviews = savedReviews.filter(r => r.id !== review?.id);
+        
+        sessionStorage.setItem('bookReviews', JSON.stringify(updatedReviews));
+        alert("삭제되었습니다.");
+        navigate('/book-review');
+      }
+    }
+  };
 
   if (!review) {
-    return <div>감상문을 찾을 수 없습니다.</div>;
+    return <div style={{textAlign: 'center', marginTop: 50}}>감상문을 찾을 수 없습니다.</div>;
   }
 
   return (
@@ -125,18 +181,29 @@ const BookReviewDetail: React.FC = () => {
           <h2>{review.reviewTitle}</h2>
         </ReviewHeader>
         
-        <MetaInfo>
-          {/* ✅ 영화 관련 필드를 도서 관련 필드로 변경 */}
-          <p><strong>책 제목:</strong> {review.bookTitle} ({review.bookInfo})</p>
-          <p><strong>완독일:</strong> {review.viewDate}</p>
-        </MetaInfo>
+        {/* ✅ InfoContainer 적용 및 CoverImage 추가 */}
+        <InfoContainer>
+          {review.coverImage ? (
+            <CoverImage src={review.coverImage} alt={review.bookTitle} />
+          ) : (
+            <CoverImage as="div" style={{display:'flex', alignItems:'center', justifyContent:'center', color:'#888', fontSize:'0.8rem'}}>No Image</CoverImage>
+          )}
+          
+          <MetaInfo>
+            {/* ✅ [수정] 책 제목과 정보를 분리하여 표시 */}
+            <p><strong>도서:</strong> {review.bookTitle}</p>
+            <p><strong>정보:</strong> {review.bookInfo}</p>
+            <p><strong>완독일:</strong> {review.viewDate}</p>
+          </MetaInfo>
+        </InfoContainer>
 
         <ContentBody>
           {review.reviewContent}
         </ContentBody>
         
+        {/* ✅ [수정] 버튼 위치 교환 */}
         <ButtonContainer>
-          {/* ✅ 목록으로 돌아가는 링크 변경 */}
+          <DeleteButton onClick={handleDelete}>삭제하기</DeleteButton>
           <BackButton to="/book-review">목록으로</BackButton>
         </ButtonContainer>
       </ReviewCard>
