@@ -55,10 +55,28 @@ export const ReadOnlyInput = styled.input`
   &:focus { outline: none; }
 `;
 
-export const ContentTextarea = styled.textarea`
+// ✅ .attrs({ spellCheck: false }) 를 추가하면 맞춤법 검사가 꺼집니다.
+export const ContentTextarea = styled.textarea.attrs({
+  spellCheck: false,
+})`
   width: 100%; height: 300px; padding: 15px; margin-bottom: 20px;
   border: 1px solid #ccc; border-radius: 8px; font-size: 16px;
   line-height: 1.6; resize: vertical; box-sizing: border-box;
+
+  /* ✅ 여기에만 폰트를 적용합니다! */
+  font-family: 'Nanum Pen Script', cursive;
+  
+  /* 💡 팁: 손글씨 폰트는 일반 폰트보다 작아 보이는 경향이 있어서 
+     기존보다 조금 더 크게(예: 1.3rem ~ 1.5rem) 설정하면 가독성이 훨씬 좋습니다.
+     원치 않으시면 font-size 줄은 지우셔도 됩니다. */
+  font-size: 1.3rem; 
+  line-height: 1.3; /* 줄 간격도 살짝 넓혀주면 더 예쁩니다 */
+
+  &::placeholder {
+    font-family: 'Pretendard', sans-serif; /* placeholder는 고딕으로 유지하고 싶다면 */
+    font-size: 1rem;
+    color: #ccc;
+  }
 `;
 
 // --- 정보 블록 ---
