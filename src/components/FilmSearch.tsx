@@ -336,6 +336,7 @@ const FilmSearch: React.FC<FilmSearchProps> = ({ isOpen, onClose }) => {
       navigate('/film', { 
         state: { 
           movieTitle: selectedMovie.movieNm,
+          movieDirector: selectedMovie.directors,
           viewDate: selectedDate.toISOString(),
           movieInfo: createMovieInfoString(selectedMovie),
           // ✅ TMDB에서 가져온 포스터 URL을 넘겨줍니다.

@@ -65,7 +65,7 @@ const FilmWritePage: React.FC = () => {
   const navigate = useNavigate();
 
   // ✅ [수정] posterUrl 추가로 받아오기
-  const { movieTitle, viewDate, movieInfo, posterUrl } = location.state || {};
+  const { movieTitle, movieDirector, viewDate, movieInfo, posterUrl } = location.state || {};
 
   const [reviewTitle, setReviewTitle] = useState('');
   const [reviewContent, setReviewContent] = useState('');
@@ -119,7 +119,7 @@ const FilmWritePage: React.FC = () => {
     setPlotSummary('');
     try {
       const model = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
-      const prompt = `영화 '${movieTitle}' 줄거리 알려줘`;
+      const prompt = `'${movieDirector}' 감독의 영화 '${movieTitle}'의 줄거리 알려줘`;
       const result = await model.generateContent(prompt);
       const response = await result.response;
       const text = response.text();
@@ -185,7 +185,7 @@ const FilmWritePage: React.FC = () => {
 
     try {
       const model = genAI.getGenerativeModel({ model: "gemini-pro-latest" });
-      const prompt = `이건 내가 작성한 영화 '${movieTitle}'에 대한 영화 감상문인데, 내가 작성한 부분은 최대한 유지하면서 좀 더 풍부하고 감성적인 표현을 사용하여 전문가가 쓴 것처럼 자연스럽게 다듬어줘.\n\n---\n\n${reviewContent}`;
+      const prompt = `이건 내가 작성한 '${movieDirector}' 감독의 영화 '${movieTitle}'에 대한 감상문인데, 내가 작성한 부분은 최대한 유지하면서 좀 더 풍부하고 감성적인 표현을 사용하여 전문가가 쓴 것처럼 자연스럽게 다듬어줘.\n\n---\n\n${reviewContent}`;
       
       const result = await model.generateContent(prompt);
       const response = await result.response;
